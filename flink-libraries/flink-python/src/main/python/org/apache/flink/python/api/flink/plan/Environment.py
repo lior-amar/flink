@@ -118,6 +118,23 @@ class Environment(object):
         self._sources.append(child)
         return child_set
 
+    def from_list(self, l):
+        """
+        Creates a new data sets that contains the elements of the given list
+
+        The elements must all be of the same type, for example, all of the String or Integer.
+        The list must not be empty.
+
+        :param l: list of elements to make up the data set
+        :return: A DataSet representing the given list of elements
+        """
+        child = OperationInfo()
+        child_set = DataSet(self, child)
+        child.identifier = _Identifier.SOURCE_VALUE
+        child.values = l
+        self._sources.append(child)
+        return child_set
+
     def generate_sequence(self, frm, to):
         """
         Creates a new data set that contains the given sequence

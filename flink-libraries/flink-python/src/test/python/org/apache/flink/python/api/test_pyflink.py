@@ -83,6 +83,36 @@ class FlinkPythonBatchTests(SubprocessTestCase):
 	"""
 	Testing the Flink python batch API
 	"""
+	def test_from_list(self):
+		env = get_environment()
+
+
+		l = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		d1 = env.from_list(l)
+		d1.map(Verify(l, "FromList")).output()
+
+		test_str_prefix = "prefix-string-for-test-"
+		l2 = []
+		for i in range(1, 10000):
+			l2.append(test_str_prefix + ":" + str(i))
+
+		class Mapper(MapFunction):
+			idx = 0
+			def map(self, value):
+				Mapper.idx += 1
+				if value.startswith(test_str_prefix):
+					parts = value.split(":")
+					if len(parts) != 2:
+						raise Exception("the string should be makde of 2 parts: prefix and number")
+					if (int(parts[1]) != Mapper.idx):
+						raise Exception("The idx of string is not as expected got[{}] expected [{}]".format(parts[1], Mapper.idx))
+					return value
+
+		d2 = env.from_list(l2)
+		d2.map(Mapper()).output()
+
+		env.set_parallelism(1)
+		env.execute(local=True)
 
 	def test_sequence(self):
 		env = get_environment()
