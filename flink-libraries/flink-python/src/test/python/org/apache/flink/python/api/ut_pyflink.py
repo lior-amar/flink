@@ -35,9 +35,15 @@ def parse_args():
 	parser.add_argument('--python-path', dest="python_path", metavar="PATH", default=None,
 						help="python search path to use")
 
+	parser.add_argument('--mvn-mode', dest="mvn_mode", action="store_true", default=False,
+						help="Intended for internal use only (DO NOT USE UNLESS YOU KNOW WAHT YOU ARE DOING) " +
+							 "This flag indicate that the script is called by maven/java editor")
+
 	parser.add_argument('--run-mode', dest="run_mode", action="store_true", default=False,
 						help="Intended for internal use only (DO NOT USE UNLESS YOU KNOW WAHT YOU ARE DOING) " +
 							 "This flag indicate that the script is called the second time to actually run the tests")
+	parser.add_argument("-ls", "--list-tests", dest="list_tests", action="store_true", default=False,
+	                    help="List the tests in the file.")
 
 	parser.add_argument('-v', dest="verbose", action="store_true", default=False,
 						help="run tests with increased verbosity")
@@ -65,8 +71,12 @@ fix_python_path(options.python_path)
 
 
 # Flink python testing imports
-from utils.subprocess_test import SubprocessTestCase
-from utils.utils import Id, Verify
+if options.mvn_mode:
+	from subprocess_test import SubprocessTestCase
+	from utils import Id, Verify
+else:
+	from utils.subprocess_test import SubprocessTestCase
+	from utils.utils import Id, Verify
 
 # Flink python imports
 from flink.plan.Environment import get_environment
@@ -360,11 +370,57 @@ class FlinkPythonBatchTests(SubprocessTestCase):
 		env.set_parallelism(1)
 		env.execute(local=True)
 
+import unittest
+
+def get_test_cases(klass, from_file=None):
+	subclasses = set()
+	work = [klass]
+	while work:
+		parent = work.pop()
+		for child in parent.__subclasses__():
+			take_class = False
+			if child not in subclasses:
+				if from_file:
+					child_file = inspect.getfile(child)
+					if child_file == from_file:
+						take_class = True
+				else:
+					take_class = True
+
+				if take_class:
+					subclasses.add(child)
+					work.append(child)
+
+
+	return subclasses
+
+
+import inspect
+def get_test_methods(klass):
+	members = inspect.getmembers(klass, predicate=inspect.ismethod)
+	test_methods = []
+	for m in members:
+		if m[0].startswith("test_"):
+			test_methods.append(m[0])
+
+	return test_methods
+
+
 # The second part of main that will drive the unittests
 if __name__ == "__main__":
 	"""
 	Running Flink Python Batch tests
 	"""
+
+	if options.list_tests:
+		test_cases = get_test_cases(SubprocessTestCase, from_file=__file__)
+
+		for tc in test_cases:
+			test_methods = get_test_methods(tc)
+			for tm in test_methods:
+				print("{}.{}".format(tc.__name__, tm))
+
+		sys.exit(0)
 
 	# The arguments are parsed at the beginning of the file since the sys.path is to be fixed
 	if options.verbose:
