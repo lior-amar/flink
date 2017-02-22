@@ -204,6 +204,7 @@ public class PythonPlanBinder {
 	}
 
 	private void startPython(String tempPath, String[] args) throws IOException {
+		arguments.setLength(0);
 		for (String arg : args) {
 			arguments.append(" ").append(arg);
 		}
