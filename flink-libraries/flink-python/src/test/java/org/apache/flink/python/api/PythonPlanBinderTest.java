@@ -57,7 +57,8 @@ public class PythonPlanBinderTest extends JavaProgramTestBase {
 
 	private static boolean isPython2Supported() {
 		try {
-			Runtime.getRuntime().exec("python");
+			Process p = Runtime.getRuntime().exec("python");
+			p.destroy();
 			return true;
 		} catch (IOException ex) {
 			return false;
@@ -66,7 +67,8 @@ public class PythonPlanBinderTest extends JavaProgramTestBase {
 
 	private static boolean isPython3Supported() {
 		try {
-			Runtime.getRuntime().exec("python3");
+			Process p = Runtime.getRuntime().exec("python3");
+			p.destroy();
 			return true;
 		} catch (IOException ex) {
 			return false;

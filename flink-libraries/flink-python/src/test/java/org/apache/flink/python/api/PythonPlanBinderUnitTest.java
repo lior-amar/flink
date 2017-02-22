@@ -100,6 +100,7 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 			while ((line = bri.readLine()) != null) {
 				tm.add(line);
 			}
+			p.waitFor();
 		} catch (Exception err) {
 			System.err.println("Error running [" + file + "]" + err);
 		}
@@ -124,7 +125,13 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 
 	private static boolean isPython2Supported() {
 		try {
-			Runtime.getRuntime().exec("python");
+			Process p = Runtime.getRuntime().exec("python");
+			p.destroy();
+			try {
+				p.waitFor();
+			} catch (Exception e) {
+
+			}
 			return true;
 		} catch (IOException ex) {
 			return false;
@@ -133,7 +140,12 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 
 	private static boolean isPython3Supported() {
 		try {
-			Runtime.getRuntime().exec("python3");
+			Process p = Runtime.getRuntime().exec("python3");
+			p.destroy();
+			try {
+				p.waitFor();
+			} catch (Exception e) {
+			}
 			return true;
 		} catch (IOException ex) {
 			return false;
