@@ -84,7 +84,9 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 			if (cwd.startsWith("file:")) {
 				cwd = cwd.substring(5);
 			}
-			System.out.println("cwd: " + cwd);
+			if (verbose) {
+				System.out.println("cwd: " + cwd);
+			}
 
 			String pythonPath = cwd + "/src/main/python/org/apache/flink/python/api/" + ":" +
 				                cwd + "/src/test/python/org/apache/flink/python/api/";
