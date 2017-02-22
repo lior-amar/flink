@@ -45,7 +45,10 @@ public class PythonPlanBinderTest extends JavaProgramTestBase {
 						+ "/src/test/python/org/apache/flink/python/api"));
 		for (FileStatus f : status) {
 			String file = f.getPath().toString();
-			if (file.endsWith(".py")) {
+
+			String[] file_parts = file.split("/");
+			String file_name =  file_parts[file_parts.length - 1];
+			if (file_name.startsWith("test_") && file_name.endsWith(".py")) {
 				files.add(file);
 			}
 		}
