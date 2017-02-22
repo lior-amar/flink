@@ -55,11 +55,10 @@ public class PythonPlanStreamer implements Serializable {
 
 	private void startPython(String tmpPath, String args) throws IOException {
 		String pythonBinaryPath = usePython3 ? FLINK_PYTHON3_BINARY_PATH : FLINK_PYTHON2_BINARY_PATH;
-
 		try {
 			Runtime.getRuntime().exec(pythonBinaryPath);
 		} catch (IOException ex) {
-			throw new RuntimeException(pythonBinaryPath + " does not point to a valid python binary.");
+			throw new RuntimeException(pythonBinaryPath + " does not point to a valid python binary: " + ex.toString());
 		}
 		process = Runtime.getRuntime().exec(pythonBinaryPath + " -B " + tmpPath + FLINK_PYTHON_PLAN_NAME + args);
 
