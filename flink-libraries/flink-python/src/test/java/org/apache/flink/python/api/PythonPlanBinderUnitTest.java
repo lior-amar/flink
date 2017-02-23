@@ -18,6 +18,7 @@ import org.apache.flink.core.fs.Path;
 import org.apache.flink.test.util.JavaProgramTestBase;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
@@ -37,16 +38,10 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 		return true;
 	}
 
-	private static String findUtilsFile() throws Exception {
+	private static String findUtilsFiles() throws Exception {
 		FileSystem fs = FileSystem.getLocalFileSystem();
 		return fs.getWorkingDirectory().toString()
-				+ "/src/test/python/org/apache/flink/python/api/utils/utils.py";
-	}
-
-	private static String findSubproessTestCaseFile() throws Exception {
-		FileSystem fs = FileSystem.getLocalFileSystem();
-		return fs.getWorkingDirectory().toString()
-				+ "/src/test/python/org/apache/flink/python/api/utils/subprocess_test.py";
+				+ "/src/test/python/org/apache/flink/python/api/utils";
 	}
 
 	private static List<String> findUnitTestFiles() throws Exception {
@@ -56,9 +51,11 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 				new Path(fs.getWorkingDirectory().toString()
 						+ "/src/test/python/org/apache/flink/python/api"));
 		for (FileStatus f : status) {
-			String file = f.getPath().toString();
-			String[] file_parts = file.split("/");
-			String file_name = file_parts[file_parts.length - 1];
+			Path path = f.getPath();
+			String file = path.hasWindowsDrive()
+				? path.getPath().substring(1)
+				: path.getPath();
+			String file_name = path.getName();
 
 			if ((file_name.startsWith("unittest_") || file_name.startsWith("ut_")) && file_name.endsWith(".py")) {
 				files.add(file);
@@ -74,7 +71,8 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 		}
 
 		List<String> tm = new ArrayList<>();
-		ProcessBuilder pb = new ProcessBuilder("python", file_fixed, "--list-tests");
+		String tmp = PythonPlanBinder.FLINK_PYTHON_FILE_PATH + PythonPlanBinder.r.nextInt();
+		ProcessBuilder pb = new ProcessBuilder("python", new File(tmp, PythonPlanBinder.FLINK_PYTHON_PLAN_NAME).getAbsolutePath(), "--list-tests");
 		String line;
 		try {
 			pb.redirectErrorStream(true);
@@ -87,13 +85,10 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 			if (verbose) {
 				System.out.println("cwd: " + cwd);
 			}
-
-			String pythonPath = cwd + "/src/main/python/org/apache/flink/python/api/" + ":" +
-				                cwd + "/src/test/python/org/apache/flink/python/api/";
-
-
-			Map<String, String> env = pb.environment();
-			env.put("PYTHONPATH", pythonPath);
+			PythonPlanBinder.prepareFiles(
+				cwd + "/src/main/python/org/apache/flink/python/api/",
+				tmp,
+				new String[]{file_fixed, findUtilsFiles()});
 
 			Process p = pb.start();
 			BufferedReader bri = new BufferedReader((new InputStreamReader(p.getInputStream())));
@@ -153,16 +148,14 @@ public class PythonPlanBinderUnitTest extends JavaProgramTestBase {
 	}
 
 	private static void runTestMethods(String pythonArg, List<Map.Entry<String, String>> allTests) throws Exception {
-		String utilsPy = findUtilsFile();
-		String subprocessPy = findSubproessTestCaseFile();
+		String utilsPy = findUtilsFiles();
 		if (verbose) {
 			System.out.println("utils: " + utilsPy);
-			System.out.println("subprocess:" + subprocessPy);
 		}
 
 		int i = 0;
 		for(Map.Entry<String, String> ent : allTests) {
-			String[] args = new String[]{pythonArg, ent.getKey(), utilsPy, subprocessPy, "-", "--run-mode", "--mvn-mode", ent.getValue()};
+			String[] args = new String[]{pythonArg, ent.getKey(), utilsPy, "-", "--run-mode", ent.getValue()};
 			if (verbose) {
 				System.out.println(i + " Running - " + ent.getKey() + "  " + ent.getValue());
 				for (String s : args) {

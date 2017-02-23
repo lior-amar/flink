@@ -78,7 +78,7 @@ public class PythonPlanBinder {
 	public static String FLINK_PYTHON3_BINARY_PATH =
 		GlobalConfiguration.loadConfiguration().getString(FLINK_PYTHON3_BINARY_KEY, "python3");
 
-	private static final Random r = new Random();
+	public static final Random r = new Random();
 
 	public static final String FLINK_PYTHON_FILE_PATH = System.getProperty("java.io.tmpdir") + File.separator + "flink_plan";
 	private static final String FLINK_PYTHON_REL_LOCAL_PATH = File.separator + "resources" + File.separator + "python";
@@ -137,7 +137,7 @@ public class PythonPlanBinder {
 
 		try {
 			String tmpPath = FLINK_PYTHON_FILE_PATH + r.nextInt();
-			prepareFiles(tmpPath, Arrays.copyOfRange(args, 0, split == 0 ? args.length : split));
+			prepareFiles(FULL_PATH, tmpPath, Arrays.copyOfRange(args, 0, split == 0 ? args.length : split));
 			startPython(tmpPath, Arrays.copyOfRange(args, split == 0 ? args.length : split + 1, args.length));
 			receivePlan();
 
@@ -164,10 +164,10 @@ public class PythonPlanBinder {
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	private void prepareFiles(String tempFilePath, String... filePaths) throws IOException, URISyntaxException {
+	public static void prepareFiles(String libPath, String tempFilePath, String... filePaths) throws IOException, URISyntaxException {
 		//Flink python package
 		clearPath(tempFilePath);
-		FileCache.copy(new Path(FULL_PATH), new Path(tempFilePath), false);
+		FileCache.copy(new Path(libPath), new Path(tempFilePath), false);
 
 		//plan file		
 		copyFile(filePaths[0], tempFilePath, FLINK_PYTHON_PLAN_NAME);
