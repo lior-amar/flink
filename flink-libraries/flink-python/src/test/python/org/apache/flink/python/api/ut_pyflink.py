@@ -99,8 +99,12 @@ class FlinkPythonBatchTests(SubprocessTestCase):
 						raise Exception("The idx of string is not as expected got[{}] expected [{}]".format(parts[1], Mapper.idx))
 					return value
 
+		class FlatMap(FlatMapFunction):
+			def flat_map(self, value, collector):
+				pass
+
 		d2 = env.from_list(l2)
-		d2.map(Mapper()).output()
+		d2.map(Mapper()).flat_map(FlatMap()).output()
 
 		env.set_parallelism(1)
 		env.execute(local=True)
