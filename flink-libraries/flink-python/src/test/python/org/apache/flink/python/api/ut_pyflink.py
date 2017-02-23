@@ -35,10 +35,6 @@ def parse_args():
 	parser.add_argument('--python-path', dest="python_path", metavar="PATH", default=None,
 						help="python search path to use")
 
-	parser.add_argument('--mvn-mode', dest="mvn_mode", action="store_true", default=False,
-						help="Intended for internal use only (DO NOT USE UNLESS YOU KNOW WAHT YOU ARE DOING) " +
-							 "This flag indicate that the script is called by maven/java editor")
-
 	parser.add_argument('--run-mode', dest="run_mode", action="store_true", default=False,
 						help="Intended for internal use only (DO NOT USE UNLESS YOU KNOW WAHT YOU ARE DOING) " +
 							 "This flag indicate that the script is called the second time to actually run the tests")
@@ -54,29 +50,14 @@ def parse_args():
 	return local_options
 
 
-# The python path argument should be present in the run mode when the python file/plane is run in a different
-# location. The assumption is that the path provided is absolute path
-def fix_python_path(python_path):
-	if python_path is not None:
-		path_list = options.python_path.split(":")
-		for p in path_list:
-			sys.path.append(p)
-
-
 # This code should run before any other piece of code using the flink python stuff
 options = parse_args()
 if options.verbose:
 	print("In first main section")
-fix_python_path(options.python_path)
 
 
-# Flink python testing imports
-if options.mvn_mode:
-	from subprocess_test import SubprocessTestCase
-	from utils import Id, Verify
-else:
-	from utils.subprocess_test import SubprocessTestCase
-	from utils.utils import Id, Verify
+from utils.subprocess_test import SubprocessTestCase
+from utils.utils import Id, Verify
 
 # Flink python imports
 from flink.plan.Environment import get_environment
