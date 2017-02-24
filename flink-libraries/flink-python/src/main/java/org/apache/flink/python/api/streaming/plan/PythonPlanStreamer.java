@@ -56,7 +56,10 @@ public class PythonPlanStreamer implements Serializable {
 	private void startPython(String tmpPath, String args) throws IOException {
 		String pythonBinaryPath = usePython3 ? FLINK_PYTHON3_BINARY_PATH : FLINK_PYTHON2_BINARY_PATH;
 		try {
-			Runtime.getRuntime().exec(pythonBinaryPath);
+			Process p = Runtime.getRuntime().exec(pythonBinaryPath);
+			p.destroy();
+			p.waitFor();
+		} catch (InterruptedException ie) {
 		} catch (IOException ex) {
 			throw new RuntimeException(pythonBinaryPath + " does not point to a valid python binary: " + ex.toString());
 		}
@@ -89,6 +92,8 @@ public class PythonPlanStreamer implements Serializable {
 	public void close() {
 		try {
 			process.exitValue();
+			process.waitFor();
+		} catch (InterruptedException ie) {
 		} catch (NullPointerException npe) { //exception occurred before process was started
 		} catch (IllegalThreadStateException ise) { //process still active
 			process.destroy();

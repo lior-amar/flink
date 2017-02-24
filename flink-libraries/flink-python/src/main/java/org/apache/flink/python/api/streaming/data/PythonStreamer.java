@@ -105,7 +105,10 @@ public class PythonStreamer implements Serializable {
 		String pythonBinaryPath = usePython3 ? FLINK_PYTHON3_BINARY_PATH : FLINK_PYTHON2_BINARY_PATH;
 
 		try {
-			Runtime.getRuntime().exec(pythonBinaryPath);
+			Process p = Runtime.getRuntime().exec(pythonBinaryPath);
+			p.destroy();
+			p.waitFor();
+		} catch (InterruptedException ie) {
 		} catch (IOException ex) {
 			throw new RuntimeException(pythonBinaryPath + " does not point to a valid python binary.");
 		}
